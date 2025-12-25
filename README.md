@@ -1,11 +1,12 @@
 # Playwright Page Object Model (POM) Framework
 
-A comprehensive Playwright automation framework using the Page Object Model pattern for testing [SauceDemo](https://www.saucedemo.com/) application.
+A comprehensive Playwright automation framework using the Page Object Model pattern for testing [SauceDemo](https://www.saucedemo.com/) application. Features GitHub Actions integration for CI/CD with customizable test execution, retry logic, and automated HTML report publishing to GitHub Pages.
 
 ## Table of Contents
 - [Project Structure](#project-structure)
 - [Setup Instructions](#setup-instructions)
 - [Running Tests](#running-tests)
+- [GitHub Actions Integration](#github-actions-integration)
 - [Configuration](#configuration)
 - [Test Reports](#test-reports)
 
@@ -200,6 +201,159 @@ reporter: [
   ['html', { outputFolder: 'playwright-report', open: 'never' }],  // Change 'always' to 'never'
 ]
 ```
+
+## GitHub Actions Integration
+
+### Overview
+
+The framework is integrated with GitHub Actions for continuous testing. The workflow supports:
+- ✅ Manual trigger (on-demand test execution)
+- ✅ Single test script execution
+- ✅ Folder-based test execution (E2E or Smoke)
+- ✅ Customizable retry and worker settings
+- ✅ Automatic HTML report publishing to GitHub Pages
+- ✅ Branch selection for test execution
+
+### Prerequisites for GitHub Actions
+
+#### 1. Enable GitHub Pages
+1. Go to your repository on GitHub
+2. Navigate to **Settings** → **Pages**
+3. Select **Source**: Deploy from a branch
+4. Select **Branch**: `gh-pages` (will be created automatically)
+5. Click **Save**
+
+The workflow will automatically create and push to the `gh-pages` branch.
+
+#### 2. Ensure GitHub Token is Available
+The workflow uses `secrets.GITHUB_TOKEN` which is automatically available in GitHub Actions. No additional setup is required.
+
+### Triggering Tests via GitHub Actions
+
+#### Method 1: Manual Workflow Dispatch
+1. Go to your repository on GitHub
+2. Navigate to **Actions** tab
+3. Select **Playwright Tests** workflow
+4. Click **Run workflow** (dropdown on the right)
+5. Fill in the parameters:
+   - **Branch**: Select which branch to run tests on (default: `main`)
+   - **Test Mode**: Choose between:
+     - `single` - Run a specific test script
+     - `all` - Run all tests in a folder
+   - **Test Folder**: (Only for "all" mode)
+     - `e2e` - Run all E2E tests
+     - `smoke` - Run all smoke tests
+   - **Test Script**: (Only for "single" mode) Specify the test file name (e.g., `e2e-001-valid-login.spec.ts`)
+   - **Retries**: Number of retries for failed tests (default: 1)
+   - **Workers**: Number of parallel test workers (default: 1)
+6. Click **Run workflow**
+
+#### Method 2: Execute Single Test Script
+
+1. Open the **Playwright Tests** workflow
+2. Set parameters as follows:
+   - **Branch**: `main`
+   - **Test Mode**: `single`
+   - **Test Script**: Enter the test file name (e.g., `e2e-001-valid-login.spec.ts`)
+   - **Retries**: `1`
+   - **Workers**: `1`
+3. Click **Run workflow**
+
+**Example test scripts:**
+```
+e2e-001-valid-login.spec.ts
+e2e-006-add-single-product.spec.ts
+smoke-001-login-page-loads.spec.ts
+```
+
+#### Method 3: Execute Tests by Folder
+
+1. Open the **Playwright Tests** workflow
+2. Set parameters as follows:
+   - **Branch**: `main`
+   - **Test Mode**: `all`
+   - **Test Folder**: Choose from dropdown:
+     - `e2e` - Runs all tests in `src/tests/e2e/`
+     - `smoke` - Runs all tests in `src/tests/smoke/`
+   - **Retries**: `1` (adjust as needed)
+   - **Workers**: `1` (increase for faster execution)
+3. Click **Run workflow**
+
+### Accessing Test Reports on GitHub Pages
+
+After workflow execution completes:
+
+1. Reports are automatically published to GitHub Pages
+2. Report URL format:
+   ```
+   https://{your-username}.github.io/{your-repo-name}/reports/{run-id}/index.html
+   ```
+
+3. **Access the report:**
+   - Look for the workflow run in the **Actions** tab
+   - Click on the completed workflow run
+   - Scroll to the bottom for the **Notice** section
+   - Click the report link or copy the URL to your browser
+   - All reports are accessible **regardless of test pass/fail status**
+
+4. **Example URL:**
+   ```
+   https://username.github.io/AutomationFramework/reports/12345678/index.html
+   ```
+
+### Workflow Configuration Details
+
+The workflow is defined in [.github/workflows/playwright-tests.yml](.github/workflows/playwright-tests.yml) and includes:
+
+- **Node.js 18** environment
+- **Chromium browser** (headless mode on GitHub Actions)
+- **Video recording** enabled for all tests
+- **HTML report** generation and deployment
+- **Artifact retention** of 30 days
+- **Automatic retries** with configurable count
+- **Parallel workers** with configurable count
+
+### Customizing Retry and Worker Settings
+
+#### Default Settings
+- **Retries**: 1
+- **Workers**: 1
+
+#### For Faster Execution (Higher Parallelism)
+Increase workers in the GitHub Actions input:
+```
+Retries: 1
+Workers: 4
+```
+
+#### For More Stable Execution (Better Reliability)
+Keep lower settings:
+```
+Retries: 2
+Workers: 1
+```
+
+### Troubleshooting GitHub Actions
+
+#### Workflow not appearing
+- Ensure the `.github/workflows/playwright-tests.yml` file is on the `main` branch
+- Refresh the GitHub Actions page
+
+#### Report link not working
+- Verify GitHub Pages is enabled in repository settings
+- Check that `gh-pages` branch exists
+- Wait a few moments for deployment to complete
+
+#### Tests failing on GitHub Actions but passing locally
+- Ensure all dependencies are installed: `npm ci`
+- Verify base URL is correctly set in [playwright.config.ts](playwright.config.ts)
+- Check for environment-specific issues (headless vs headed mode)
+- Review test videos and traces in the generated report
+
+#### Cannot select test script in "single" mode
+- Ensure test file exists in `src/tests/` directory
+- Use correct file name with `.spec.ts` extension
+- Example: `e2e-001-valid-login.spec.ts`
 
 ## Test Reports
 

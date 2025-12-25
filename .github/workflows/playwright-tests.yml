@@ -1,0 +1,112 @@
+name: Playwright Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to run tests on'
+        required: true
+        default: 'main'
+        type: string
+      test_mode:
+        description: 'Select test execution mode'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - single
+          - all
+      test_folder:
+        description: 'Select test folder (only used when mode is "all")'
+        required: false
+        default: 'e2e'
+        type: choice
+        options:
+          - e2e
+          - smoke
+      test_script:
+        description: 'Specific test script to run (only used when mode is "single")'
+        required: false
+        type: string
+        placeholder: 'e.g., e2e-001-valid-login.spec.ts'
+      retries:
+        description: 'Number of retries for failed tests'
+        required: false
+        default: '1'
+        type: string
+      workers:
+        description: 'Number of parallel workers'
+        required: false
+        default: '1'
+        type: string
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Validate inputs
+        id: validate
+        run: |
+          if [ "${{ inputs.test_mode }}" = "single" ]; then
+            if [ -z "${{ inputs.test_script }}" ]; then
+              echo "Error: test_script is required when test_mode is 'single'"
+              exit 1
+            fi
+            echo "test_path=src/tests/**/${{ inputs.test_script }}" >> $GITHUB_OUTPUT
+          else
+            echo "test_path=src/tests/${{ inputs.test_folder }}/**/*.spec.ts" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run Playwright tests
+        run: |
+          npx playwright test \
+            --grep="${{ steps.validate.outputs.test_path }}" \
+            --retries=${{ inputs.retries }} \
+            --workers=${{ inputs.workers }} \
+            --project=chromium \
+            --reporter=html
+        continue-on-error: true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Deploy to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./playwright-report
+          destination_dir: reports/${{ github.run_id }}
+
+      - name: Comment PR with Report Link
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const reportUrl = `https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/reports/${{ github.run_id }}/index.html`;
+            console.log(`📊 Playwright HTML Report: ${reportUrl}`);
+            core.notice(`📊 Playwright HTML Report: ${reportUrl}`);
