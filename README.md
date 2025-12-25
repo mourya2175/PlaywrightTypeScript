@@ -220,11 +220,11 @@ The framework is integrated with GitHub Actions for continuous testing. The work
 1. Go to your repository on GitHub
 2. Navigate to **Settings** → **Pages**
 3. Select **Source**: Deploy from a branch
-4. Select **Branch**: `main` (or your default branch)
+4. Select **Branch**: `gh-pages` (this will be auto-created by the workflow)
 5. Select **Folder**: `/ (root)`
 6. Click **Save**
 
-The workflow will automatically create a `gh-pages` branch and publish reports there. You don't need to manually create the `gh-pages` branch.
+**Important:** After the workflow runs for the first time, the `gh-pages` branch will be automatically created. You may need to refresh the Settings → Pages page and the `gh-pages` option should appear in the branch dropdown. Select it and save.
 
 **Note:** GitHub Pages will be available at: `https://{your-username}.github.io/{your-repo-name}/`
 
@@ -286,22 +286,31 @@ smoke-001-login-page-loads.spec.ts
 
 After workflow execution completes:
 
-1. Reports are automatically published to GitHub Pages
-2. Report URL format:
-   ```
-   https://{your-username}.github.io/{your-repo-name}/reports/{run-id}/index.html
-   ```
+1. **GitHub Pages Report** (Published automatically):
+   - Reports are automatically published to GitHub Pages via the `gh-pages` branch
+   - Report URL format:
+     ```
+     https://{your-username}.github.io/{your-repo-name}/reports/{run-id}/index.html
+     ```
+   - Wait 1-2 minutes for GitHub Pages to build and deploy the report
+   - All reports are accessible **regardless of test pass/fail status**
+
+2. **Download HTML Report** (As an Artifact):
+   - Go to the **Actions** tab
+   - Click on the completed workflow run
+   - Scroll down to **Artifacts** section
+   - Download `playwright-report` zip file containing the full HTML report
+   - Extract and open `index.html` in your browser
 
 3. **Access the report:**
    - Look for the workflow run in the **Actions** tab
    - Click on the completed workflow run
-   - Scroll to the bottom for the **Notice** section
+   - Scroll to the bottom for the **Notice** section showing the report link
    - Click the report link or copy the URL to your browser
-   - All reports are accessible **regardless of test pass/fail status**
 
 4. **Example URL:**
    ```
-   https://username.github.io/AutomationFramework/reports/12345678/index.html
+   https://username.github.io/PlaywrightTypeScript/reports/12345678/index.html
    ```
 
 ### Workflow Configuration Details
@@ -342,12 +351,28 @@ Workers: 1
 - Ensure the `.github/workflows/playwright-tests.yml` file is on the `main` branch
 - Refresh the GitHub Actions page
 
-#### Report link not working
+#### Permission denied error when deploying
+- This error occurs when GitHub Pages settings are not configured correctly
+- **Solution:**
+  1. Go to **Settings** → **Pages**
+  2. Change source to **Deploy from a branch**
+  3. Select **Branch**: `gh-pages` (it will appear after first workflow run)
+  4. Select **Folder**: `/ (root)`
+  5. Click **Save**
+  6. Re-run the workflow from the Actions tab
+
+#### Report link not working (404 error)
 - Verify GitHub Pages is enabled in repository settings (Settings → Pages)
-- Ensure **Source** is set to **Deploy from a branch** with **main** and **/ (root)**
-- The `gh-pages` branch will be created automatically by the workflow
-- Wait 1-2 minutes for GitHub Pages deployment to complete (check Settings → Pages for deployment status)
-- Check the workflow logs for any deployment errors
+- Ensure **Branch** is set to `gh-pages` and **Folder** is `/ (root)`
+- The `gh-pages` branch will be created automatically after the workflow's first successful run
+- Wait 1-2 minutes for GitHub Pages deployment to complete
+- Check the workflow logs for deployment errors
+- Refresh the GitHub Pages settings page to see the `gh-pages` option
+
+#### Cannot download artifact
+- Artifacts are available in the **Actions** tab under the workflow run
+- Artifacts are retained for 30 days by default
+- Look for `playwright-report` in the artifacts section
 
 #### Tests failing on GitHub Actions but passing locally
 - Ensure all dependencies are installed: `npm ci`

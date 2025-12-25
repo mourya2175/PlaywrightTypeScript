@@ -44,6 +44,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
     
     steps:
       - name: Checkout code
@@ -101,6 +105,7 @@ jobs:
           publish_dir: ./playwright-report
           destination_dir: reports/${{ github.run_id }}
           force_orphan: true
+          cname: false
 
       - name: Comment PR with Report Link
         if: always()
