@@ -220,10 +220,13 @@ The framework is integrated with GitHub Actions for continuous testing. The work
 1. Go to your repository on GitHub
 2. Navigate to **Settings** → **Pages**
 3. Select **Source**: Deploy from a branch
-4. Select **Branch**: `gh-pages` (will be created automatically)
-5. Click **Save**
+4. Select **Branch**: `main` (or your default branch)
+5. Select **Folder**: `/ (root)`
+6. Click **Save**
 
-The workflow will automatically create and push to the `gh-pages` branch.
+The workflow will automatically create a `gh-pages` branch and publish reports there. You don't need to manually create the `gh-pages` branch.
+
+**Note:** GitHub Pages will be available at: `https://{your-username}.github.io/{your-repo-name}/`
 
 #### 2. Ensure GitHub Token is Available
 The workflow uses `secrets.GITHUB_TOKEN` which is automatically available in GitHub Actions. No additional setup is required.
@@ -340,9 +343,11 @@ Workers: 1
 - Refresh the GitHub Actions page
 
 #### Report link not working
-- Verify GitHub Pages is enabled in repository settings
-- Check that `gh-pages` branch exists
-- Wait a few moments for deployment to complete
+- Verify GitHub Pages is enabled in repository settings (Settings → Pages)
+- Ensure **Source** is set to **Deploy from a branch** with **main** and **/ (root)**
+- The `gh-pages` branch will be created automatically by the workflow
+- Wait 1-2 minutes for GitHub Pages deployment to complete (check Settings → Pages for deployment status)
+- Check the workflow logs for any deployment errors
 
 #### Tests failing on GitHub Actions but passing locally
 - Ensure all dependencies are installed: `npm ci`
