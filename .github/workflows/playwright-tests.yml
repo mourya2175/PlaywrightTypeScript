@@ -57,7 +57,7 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
@@ -70,15 +70,15 @@ jobs:
               echo "Error: test_script is required when test_mode is 'single'"
               exit 1
             fi
-            echo "test_path=src/tests/**/${{ inputs.test_script }}" >> $GITHUB_OUTPUT
+            echo "test_file=src/tests/**/${{ inputs.test_script }}" >> $GITHUB_OUTPUT
           else
-            echo "test_path=src/tests/${{ inputs.test_folder }}/**/*.spec.ts" >> $GITHUB_OUTPUT
+            echo "test_file=src/tests/${{ inputs.test_folder }}" >> $GITHUB_OUTPUT
           fi
 
       - name: Run Playwright tests
         run: |
           npx playwright test \
-            --grep="${{ steps.validate.outputs.test_path }}" \
+            "${{ steps.validate.outputs.test_file }}" \
             --retries=${{ inputs.retries }} \
             --workers=${{ inputs.workers }} \
             --project=chromium \
